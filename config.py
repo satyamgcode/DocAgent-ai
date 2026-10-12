@@ -15,7 +15,27 @@ DB_PATH = os.path.join(DATA_DIR, "vector_store.db")
 
 # Provider Configuration
 # Supported providers: "gemini", "openai", "claude", "generic", "openrouter", "groq"
-DEFAULT_PROVIDER = os.getenv("DEFAULT_PROVIDER", "gemini").lower()
+def _detect_default_provider():
+    """Auto-detect provider from available API keys when DEFAULT_PROVIDER is not set explicitly."""
+    explicit = os.getenv("DEFAULT_PROVIDER", "").strip().lower()
+    if explicit:
+        return explicit
+    # Fall back to whichever key is actually present
+    if os.getenv("GEMINI_API_KEY", ""):
+        return "gemini"
+    if os.getenv("OPENAI_API_KEY", ""):
+        return "openai"
+    if os.getenv("ANTHROPIC_API_KEY", "") or os.getenv("CLAUDE_API_KEY", ""):
+        return "claude"
+    if os.getenv("GROQ_API_KEY", ""):
+        return "groq"
+    if os.getenv("OPENROUTER_API_KEY", ""):
+        return "openrouter"
+    if os.getenv("GENERIC_API_KEY", ""):
+        return "generic"
+    return "gemini"  # final fallback
+
+DEFAULT_PROVIDER = _detect_default_provider()
 
 # API Keys - load from environment (set these in .env or pass explicitly)
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")

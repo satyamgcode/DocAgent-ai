@@ -3,6 +3,6 @@
     <div class="flex items-center gap-2 text-sm text-slate-700 font-bold font-heading">
       <i class="mdi mdi-shield-text-outline text-darkTeal text-base"></i> DocAgent AI
     </div>
-    <p>&copy; 2026 DocAgent AI SaaS. All rights reserved. Powered by Google Gemini.</p>
+    <p>&copy; 2026 DocAgent AI SaaS. All rights reserved.</p>
   </footer>
 </template>

@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { 
   sendChatMessage, 
   getChatSessions, 
@@ -6,6 +6,7 @@ import {
   createChatSession, 
   deleteChatSession as apiDeleteChatSession 
 } from '../api/client'
+import { useAuth } from './useAuth'
 
 const sessions = ref([])
 const activeSessionId = ref(null)
@@ -14,7 +15,10 @@ const chatHistory = ref([])
 const isTyping = ref(false)
 const isLoadingSessions = ref(false)
 const isLoadingSession = ref(false)
-const selectedProvider = ref('gemini') // gemini, openai, claude, generic, groq, openrouter
+
+// Get the active provider and apiKey from auth (reactive, shared state)
+const { defaultProvider, apiKey: authApiKey, settings: authSettings } = useAuth()
+
 const PROVIDER_DEFAULT_MODELS = {
   gemini: 'models/gemini-2.0-flash',
   openai: 'gpt-4o-mini',
@@ -23,7 +27,20 @@ const PROVIDER_DEFAULT_MODELS = {
   groq: 'llama-3.3-70b-versatile',
   openrouter: 'meta-llama/llama-3.3-70b-instruct'
 }
-const selectedModel = ref('models/gemini-2.0-flash')
+
+const selectedProvider = ref(defaultProvider.value || 'gemini')
+const selectedModel = ref(PROVIDER_DEFAULT_MODELS[defaultProvider.value] || 'models/gemini-2.0-flash')
+
+// Keep selectedProvider in sync when backend settings load
+watch(defaultProvider, (newProv) => {
+  if (newProv && newProv !== selectedProvider.value) {
+    selectedProvider.value = newProv
+    if (PROVIDER_DEFAULT_MODELS[newProv]) {
+      selectedModel.value = PROVIDER_DEFAULT_MODELS[newProv]
+    }
+  }
+})
+
 const ragLimit = ref(parseInt(localStorage.getItem('docagent_rag_limit')) || 4)
 
 function setProvider(provider) {

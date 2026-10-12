@@ -65,7 +65,7 @@
         </div>
         
         <div class="text-[10px] text-slate-400 font-semibold">
-          Secure workspace standard. Powered by Google Gemini AI models.
+          Secure workspace powered by advanced AI models.
         </div>
       </div>
 

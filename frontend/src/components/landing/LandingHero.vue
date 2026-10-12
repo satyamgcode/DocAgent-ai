@@ -50,7 +50,7 @@
         <div class="flex items-center gap-2 ml-1">
           <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Powered by</span>
           <span class="text-xs font-bold text-slate-700 flex items-center gap-1 font-heading">
-            <i class="mdi mdi-google text-darkTeal"></i> Gemini 2.5 Flash
+            <i class="mdi mdi-brain text-darkTeal"></i> Advanced AI
           </span>
         </div>
       </div>

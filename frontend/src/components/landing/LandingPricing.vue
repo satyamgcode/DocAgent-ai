@@ -21,7 +21,7 @@
             <i class="mdi mdi-check text-limeGreen"></i> Up to 5 PDF/TXT Files
           </li>
           <li class="flex items-center gap-2.5 text-xs md:text-sm text-slate-600 font-medium">
-            <i class="mdi mdi-check text-limeGreen"></i> Gemini 2.5 Flash
+            <i class="mdi mdi-check text-limeGreen"></i> Advanced AI Models
           </li>
           <li class="flex items-center gap-2.5 text-xs md:text-sm text-slate-600 font-medium">
             <i class="mdi mdi-check text-limeGreen"></i> Basic Chatbot Widget
@@ -47,7 +47,7 @@
             <i class="mdi mdi-check text-limeGreen"></i> Unlimited Uploads
           </li>
           <li class="flex items-center gap-2.5 text-xs md:text-sm text-slate-600 font-medium">
-            <i class="mdi mdi-check text-limeGreen"></i> Gemini 2.5 Pro & Flash
+            <i class="mdi mdi-check text-limeGreen"></i> Pro & Standard AI Models
           </li>
           <li class="flex items-center gap-2.5 text-xs md:text-sm text-slate-600 font-medium">
             <i class="mdi mdi-check text-limeGreen"></i> Custom Theme Widgets

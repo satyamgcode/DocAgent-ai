@@ -187,7 +187,7 @@ defineProps({
 })
 
 const { documents, stats, isUploading, uploadFileName, uploadProgress, upload, removeDoc } = useDocuments()
-const { apiKey, hasGlobalKey } = useAuth()
+useAuth() // keep composable initialized
 
 const fileInputRef = ref(null)
 const isDragOver = ref(false)
@@ -214,11 +214,6 @@ function handleNewChat() {
 }
 
 function triggerFileInput() {
-  if (!apiKey.value && !hasGlobalKey.value) {
-    alert("Gemini API Key is missing. Please configure your API Key in Settings before uploading documents.")
-    emit('openSettings')
-    return
-  }
   fileInputRef.value?.click()
 }
 
@@ -232,11 +227,6 @@ async function handleFileSelected(e) {
 
 async function handleDrop(e) {
   isDragOver.value = false
-  if (!apiKey.value && !hasGlobalKey.value) {
-    alert("Gemini API Key is missing. Please configure your API Key in Settings before uploading documents.")
-    emit('openSettings')
-    return
-  }
   const file = e.dataTransfer.files?.[0]
   if (file) {
     await processUpload(file)

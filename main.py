@@ -222,11 +222,18 @@ def get_user_settings(current_user: dict = Depends(get_current_user)):
         raise HTTPException(status_code=404, detail="User not found.")
     
     settings = user_info.get("settings", {})
+
+    # Determine effective provider: user preference → global auto-detected default
+    effective_provider = (settings.get("provider") or config.DEFAULT_PROVIDER or "gemini").lower()
+
+    # Return the user's api_key for their active provider
+    active_api_key = vector_db.get_user_provider_key(user_info, effective_provider) or user_info.get("api_key", "")
+
     return {
-        "api_key": user_info.get("api_key", ""),
+        "api_key": active_api_key,
         "settings": settings,
         "chatbot_id": current_user["chatbot_id"],
-        "has_global_key": bool(config.get_api_key()),
+        "has_global_key": bool(config.get_api_key("gemini") or config.get_api_key("openai") or config.get_api_key("claude") or config.get_api_key("generic")),
         "global_keys_available": {
             "gemini": bool(config.get_api_key("gemini")),
             "openai": bool(config.get_api_key("openai")),
@@ -235,7 +242,7 @@ def get_user_settings(current_user: dict = Depends(get_current_user)):
             "groq": bool(config.get_api_key("groq")),
             "openrouter": bool(config.get_api_key("openrouter")),
         },
-        "default_provider": config.DEFAULT_PROVIDER,
+        "default_provider": effective_provider,
         "default_models": config.DEFAULT_MODELS,
         "supported_providers": config.get_available_providers()
     }
@@ -321,31 +328,25 @@ async def upload_document(
     temp_file_path = os.path.join(config.UPLOAD_DIR, f"{doc_id}{ext}")
     chatbot_id = current_user["chatbot_id"]
     
-    # Resolve Provider and API Key
+    # Resolve Provider and API Key — always prefer server .env config
     user_info = vector_db.get_user_by_id(current_user["user_id"])
     requested_provider = (
-        provider
-        or (user_info.get("settings", {}).get("provider") if user_info else None)
-        or config.DEFAULT_PROVIDER
+        config.DEFAULT_PROVIDER
         or "gemini"
     ).lower()
 
     resolved_api_key = (
-        api_key
+        config.get_api_key(requested_provider)
         or (vector_db.get_user_provider_key(user_info, requested_provider) if user_info else None)
-        or config.get_api_key(requested_provider)
     )
 
     resolved_base_url = (
-        base_url
+        config.get_base_url(requested_provider)
         or (user_info.get("settings", {}).get("generic_base_url") if user_info else None)
-        or config.get_base_url(requested_provider)
     )
 
     requested_model = (
-        model
-        or (user_info.get("settings", {}).get("generic_model") if user_info and requested_provider in ("generic", "custom") else None)
-        or config.get_default_model(requested_provider)
+        config.get_default_model(requested_provider)
     )
 
     try:
@@ -577,33 +578,30 @@ async def chat_with_agent(
     user_info = vector_db.get_user_by_chatbot_id(chatbot_id)
     requested_provider = (
         request.provider
-        or (user_info.get("settings", {}).get("provider") if user_info else None)
         or config.DEFAULT_PROVIDER
         or "gemini"
     ).lower()
 
+    # Always prefer server .env keys — user-stored keys are just a fallback
     resolved_api_key = (
-        x_api_key
+        config.get_api_key(requested_provider)
         or (vector_db.get_user_provider_key(user_info, requested_provider) if user_info else None)
-        or config.get_api_key(requested_provider)
     )
 
     resolved_base_url = (
-        request.base_url
+        config.get_base_url(requested_provider)
         or (user_info.get("settings", {}).get("generic_base_url") if user_info else None)
-        or config.get_base_url(requested_provider)
     )
 
     requested_model = (
         request.model
-        or (user_info.get("settings", {}).get("generic_model") if user_info and requested_provider in ("generic", "custom") else None)
         or config.get_default_model(requested_provider)
     )
 
     if not resolved_api_key and not (requested_provider in ("generic", "custom") and resolved_base_url):
         raise HTTPException(
             status_code=400,
-            detail=f"{requested_provider.capitalize()} API Key is missing. Please configure it in settings or your .env file."
+            detail=f"AI API key is not configured on the server. Please set an API key in the server .env file."
         )
 
     # 3. Resolve user_id from auth token

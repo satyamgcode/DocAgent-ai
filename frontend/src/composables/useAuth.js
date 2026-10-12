@@ -16,6 +16,7 @@ const email = ref('')
 const chatbotId = ref('')
 const apiKey = ref('')
 const hasGlobalKey = ref(false)
+const defaultProvider = ref('gemini')
 const isAuthenticated = computed(() => !!sessionToken.value)
 
 const username = computed(() => {
@@ -99,6 +100,7 @@ async function loadSettings() {
     globalKeysAvailable.value = data.global_keys_available || {}
     if (data.supported_providers) supportedProviders.value = data.supported_providers
     if (data.default_models) defaultModels.value = data.default_models
+    if (data.default_provider) defaultProvider.value = data.default_provider
     return data
   } catch (e) {
     console.error("Failed to load settings:", e)
@@ -112,6 +114,8 @@ async function updateSettings(newSettings) {
   } else if (newSettings && typeof newSettings === 'object') {
     apiKey.value = newSettings.api_key || newSettings.gemini_key || apiKey.value
     settings.value = { ...settings.value, ...newSettings }
+    // Update defaultProvider if provider was explicitly changed
+    if (newSettings.provider) defaultProvider.value = newSettings.provider
   }
   await loadSettings()
 }
@@ -132,6 +136,7 @@ export function useAuth() {
     username,
     chatbotId,
     apiKey,
+    defaultProvider,
     settings,
     globalKeysAvailable,
     supportedProviders,

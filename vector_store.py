@@ -358,15 +358,30 @@ class VectorStore:
         current_settings = user.get("settings", {}) if user else {}
         current_settings.update(settings_dict)
 
-        # Sync primary api_key column if Gemini key or active provider key is present
-        gemini_key = current_settings.get("gemini_key") or current_settings.get("api_key")
-        
+        # Determine the active provider key to sync into the api_key column
+        active_provider = current_settings.get("provider", "").lower()
+        active_key = ""
+        if active_provider == "openai":
+            active_key = current_settings.get("openai_key", "")
+        elif active_provider in ("claude", "anthropic"):
+            active_key = current_settings.get("claude_key", "") or current_settings.get("anthropic_key", "")
+        elif active_provider in ("generic", "custom"):
+            active_key = current_settings.get("generic_key", "")
+        elif active_provider == "groq":
+            active_key = current_settings.get("groq_key", "") or current_settings.get("generic_key", "")
+        elif active_provider == "openrouter":
+            active_key = current_settings.get("openrouter_key", "") or current_settings.get("generic_key", "")
+
+        # Fall back to gemini key if no provider-specific key resolved
+        if not active_key:
+            active_key = current_settings.get("gemini_key", "") or current_settings.get("api_key", "")
+
         conn = sqlite3.connect(self.db_path)
         cursor = conn.cursor()
-        if gemini_key:
+        if active_key:
             cursor.execute(
                 "UPDATE users SET settings_json = ?, api_key = ? WHERE id = ?",
-                (json.dumps(current_settings), gemini_key, user_id)
+                (json.dumps(current_settings), active_key, user_id)
             )
         else:
             cursor.execute(
