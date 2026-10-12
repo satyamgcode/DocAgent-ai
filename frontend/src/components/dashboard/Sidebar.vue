@@ -187,7 +187,7 @@ defineProps({
 })
 
 const { documents, stats, isUploading, uploadFileName, uploadProgress, upload, removeDoc } = useDocuments()
-useAuth() // keep composable initialized
+const { apiKey } = useAuth()
 
 const fileInputRef = ref(null)
 const isDragOver = ref(false)
@@ -235,7 +235,7 @@ async function handleDrop(e) {
 
 async function processUpload(file) {
   try {
-    const res = await upload(file, apiKey.value)
+    const res = await upload(file)
     if (res.isFirstUpload) {
       emit('firstUploadComplete', file.name)
     }

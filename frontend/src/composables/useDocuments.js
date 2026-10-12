@@ -44,7 +44,7 @@ async function fetchDocuments() {
   }
 }
 
-async function upload(file, apiKey) {
+async function upload(file, apiKey = null) {
   isUploading.value = true
   uploadFileName.value = file.name
   uploadProgress.value = 0
