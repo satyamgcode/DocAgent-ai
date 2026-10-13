@@ -631,15 +631,13 @@ async def chat_with_agent(
             vector_db.create_chat_session(chat_session_id, user_id, chatbot_id)
 
     try:
-        # 5. Classify question type
-        question_type = ai_agent.classify_question(
-            query=query,
-            api_key=resolved_api_key,
-            model_name=requested_model,
-            provider=requested_provider,
-            base_url=resolved_base_url
-        )
-        
+        # 5. Check if query is a simple greeting or pleasantry
+        pleasantry = ai_agent.check_conversational_pleasantry(query)
+        if pleasantry:
+            question_type = "general"
+        else:
+            question_type = "document"
+
         # 6. Create question record (only if saving session)
         question_id = "q_" + str(uuid.uuid4())[:12]
         if should_save and user_id and chat_session_id:
@@ -657,44 +655,54 @@ async def chat_with_agent(
         context = []
         source_info = ""
 
-        if question_type == "document":
-            # 7a. Document-based RAG flow
-            query_emb = ai_agent.get_embedding(query, api_key=resolved_api_key, provider=requested_provider)
-            matches = vector_db.search_similar_chunks(query_emb, chatbot_id=chatbot_id, limit=4)
-            
-            if not matches:
-                # No documents uploaded - fall back to general answer
-                question_type = "general"
-                answer = ai_agent.generate_general_answer(
-                    query=query,
-                    api_key=resolved_api_key,
-                    model_name=requested_model,
-                    chat_history=history,
-                    provider=requested_provider,
-                    base_url=resolved_base_url
-                )
-            else:
-                answer = ai_agent.generate_answer(
-                    query=query,
-                    context_chunks=matches,
-                    api_key=resolved_api_key,
-                    model_name=requested_model,
-                    chat_history=history,
-                    provider=requested_provider,
-                    base_url=resolved_base_url
-                )
-                context = matches
-                source_info = ", ".join(set(m["filename"] for m in matches))
+        if pleasantry:
+            answer = pleasantry
+            context = []
+            source_info = ""
         else:
-            # 7b. General question flow
-            answer = ai_agent.generate_general_answer(
-                query=query,
-                api_key=resolved_api_key,
-                model_name=requested_model,
-                chat_history=history,
-                provider=requested_provider,
-                base_url=resolved_base_url
-            )
+            # Check if any documents exist for this chatbot
+            docs = vector_db.get_documents(chatbot_id=chatbot_id)
+            if not docs:
+                answer = (
+                    "No documents have been uploaded yet. Please upload your documents first so I can "
+                    "answer questions based strictly on their content."
+                )
+                context = []
+                source_info = ""
+            else:
+                # Document-based RAG flow
+                query_emb = ai_agent.get_embedding(query, api_key=resolved_api_key, provider=requested_provider)
+                matches = vector_db.search_similar_chunks(query_emb, chatbot_id=chatbot_id, limit=4)
+
+                max_score = max((m.get("score", 0.0) for m in matches), default=0.0)
+                if not matches or max_score <= 0.0:
+                    answer = (
+                        "I couldn't find a relevant answer to your query"
+                        "Please contact the Administration or Support team for further assistance."
+                    )
+                    context = []
+                    source_info = ""
+                else:
+                    answer = ai_agent.generate_answer(
+                        query=query,
+                        context_chunks=matches,
+                        api_key=resolved_api_key,
+                        model_name=requested_model,
+                        chat_history=history,
+                        provider=requested_provider,
+                        base_url=resolved_base_url
+                    )
+                    # If answer indicates information wasn't found in documents, clear context citations
+                    if (
+                        "couldn't find anything" in answer.lower()
+                        or "raise your query to administration" in answer.lower()
+                        or "cannot find this information" in answer.lower()
+                    ):
+                        context = []
+                        source_info = ""
+                    else:
+                        context = matches
+                        source_info = ", ".join(set(m["filename"] for m in matches))
 
         # 8. Update question with AI response (only if saving session)
         if should_save and user_id and chat_session_id:

@@ -8,16 +8,16 @@
         </div>
         <h3 class="text-base font-black text-slate-900 mb-1.5 font-heading">DocAgent AI Question Assistant</h3>
         <p class="text-xs text-slate-500 leading-relaxed mb-4 font-medium">
-          Ask questions about your uploaded <strong>Company Policies & Handbooks</strong> or ask <strong>General Workplace & HR questions</strong>. Every query is logged, classified, and reviewable in your Admin Dashboard.
+          Ask questions about your uploaded <strong>knowledge base documents</strong>. Answers are generated strictly from the content of your uploaded files, complete with source citations.
         </p>
 
-        <!-- Document vs General notice badge -->
+        <!-- Document Knowledge Base notice badge -->
         <div class="flex items-center justify-center gap-2 mb-5">
           <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-lightTeal/10 text-darkTeal text-[10px] font-bold">
-            <i class="mdi mdi-file-document-outline"></i> Document Policy Search
+            <i class="mdi mdi-file-document-check-outline"></i> Verified Document Knowledge Base
           </span>
-          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-indigo-50 text-indigo-700 text-[10px] font-bold">
-            <i class="mdi mdi-lightbulb-outline"></i> General HR Knowledge
+          <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-slate-100 text-slate-600 text-[10px] font-bold">
+            <i class="mdi mdi-shield-check-outline"></i> Strict Document-Only Answers
           </span>
         </div>
 
@@ -26,46 +26,45 @@
           <!-- Document Examples -->
           <button 
             class="text-left p-2.5 rounded-xl bg-slate-50 border border-gray-200 hover:border-lightTeal/50 hover:bg-lightTeal/5 text-xs text-slate-700 hover:text-darkTeal transition-all flex items-start gap-2 font-semibold cursor-pointer"
-            @click="$emit('applySuggestion', 'What is the employee code of conduct?')"
+            @click="$emit('applySuggestion', 'Can you summarize the main points in the uploaded documents?')"
           >
             <i class="mdi mdi-file-check-outline text-darkTeal text-sm shrink-0 mt-0.5"></i> 
             <div class="min-w-0">
-              <span class="block truncate">Code of conduct</span>
-              <span class="text-[9px] text-slate-400 font-normal">Searches uploaded policies</span>
+              <span class="block truncate">Document Overview</span>
+              <span class="text-[9px] text-slate-400 font-normal">Summarizes uploaded content</span>
             </div>
           </button>
 
           <button 
             class="text-left p-2.5 rounded-xl bg-slate-50 border border-gray-200 hover:border-lightTeal/50 hover:bg-lightTeal/5 text-xs text-slate-700 hover:text-darkTeal transition-all flex items-start gap-2 font-semibold cursor-pointer"
-            @click="$emit('applySuggestion', 'How do I apply for annual or medical leaves?')"
+            @click="$emit('applySuggestion', 'What are the main rules, guidelines, or instructions?')"
           >
-            <i class="mdi mdi-calendar-blank-outline text-darkTeal text-sm shrink-0 mt-0.5"></i> 
+            <i class="mdi mdi-format-list-checks text-darkTeal text-sm shrink-0 mt-0.5"></i> 
             <div class="min-w-0">
-              <span class="block truncate">Leave application policy</span>
-              <span class="text-[9px] text-slate-400 font-normal">Searches handbook terms</span>
-            </div>
-          </button>
-
-          <!-- General Knowledge Examples -->
-          <button 
-            class="text-left p-2.5 rounded-xl bg-slate-50 border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-xs text-slate-700 hover:text-indigo-700 transition-all flex items-start gap-2 font-semibold cursor-pointer"
-            @click="$emit('applySuggestion', 'What are industry best practices for conducting effective 1-on-1 feedback meetings?')"
-          >
-            <i class="mdi mdi-account-group-outline text-indigo-600 text-sm shrink-0 mt-0.5"></i> 
-            <div class="min-w-0">
-              <span class="block truncate">1-on-1 meeting tips</span>
-              <span class="text-[9px] text-indigo-400 font-normal">General HR advice</span>
+              <span class="block truncate">Rules & Guidelines</span>
+              <span class="text-[9px] text-slate-400 font-normal">Searches guidelines & policies</span>
             </div>
           </button>
 
           <button 
-            class="text-left p-2.5 rounded-xl bg-slate-50 border border-gray-200 hover:border-indigo-300 hover:bg-indigo-50/50 text-xs text-slate-700 hover:text-indigo-700 transition-all flex items-start gap-2 font-semibold cursor-pointer"
-            @click="$emit('applySuggestion', 'How should I prepare for a performance review discussion?')"
+            class="text-left p-2.5 rounded-xl bg-slate-50 border border-gray-200 hover:border-lightTeal/50 hover:bg-lightTeal/5 text-xs text-slate-700 hover:text-darkTeal transition-all flex items-start gap-2 font-semibold cursor-pointer"
+            @click="$emit('applySuggestion', 'What are the step-by-step procedures described?')"
           >
-            <i class="mdi mdi-chart-line text-indigo-600 text-sm shrink-0 mt-0.5"></i> 
+            <i class="mdi mdi-stairs text-darkTeal text-sm shrink-0 mt-0.5"></i> 
             <div class="min-w-0">
-              <span class="block truncate">Performance reviews</span>
-              <span class="text-[9px] text-indigo-400 font-normal">General career guidance</span>
+              <span class="block truncate">Procedures & Steps</span>
+              <span class="text-[9px] text-slate-400 font-normal">Searches processes & instructions</span>
+            </div>
+          </button>
+
+          <button 
+            class="text-left p-2.5 rounded-xl bg-slate-50 border border-gray-200 hover:border-lightTeal/50 hover:bg-lightTeal/5 text-xs text-slate-700 hover:text-darkTeal transition-all flex items-start gap-2 font-semibold cursor-pointer"
+            @click="$emit('applySuggestion', 'What are the specific conditions, requirements, or criteria?')"
+          >
+            <i class="mdi mdi-clipboard-text-outline text-darkTeal text-sm shrink-0 mt-0.5"></i> 
+            <div class="min-w-0">
+              <span class="block truncate">Requirements & Criteria</span>
+              <span class="text-[9px] text-slate-400 font-normal">Searches terms & requirements</span>
             </div>
           </button>
         </div>
@@ -103,13 +102,13 @@
                 v-if="msg.questionType === 'document'" 
                 class="px-2 py-0.5 rounded-full bg-lightTeal/15 text-darkTeal font-extrabold flex items-center gap-1"
               >
-                <i class="mdi mdi-file-document-outline"></i> Document Policy
+                <i class="mdi mdi-file-document-outline"></i> Document Knowledge
               </span>
               <span 
                 v-else-if="msg.questionType === 'general'" 
-                class="px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-extrabold flex items-center gap-1"
+                class="px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-extrabold flex items-center gap-1"
               >
-                <i class="mdi mdi-lightbulb-outline"></i> General Knowledge
+                <i class="mdi mdi-robot-outline"></i> Assistant Response
               </span>
 
               <!-- Status Badge -->

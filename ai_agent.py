@@ -1,4 +1,5 @@
 import os
+import re
 import time
 import math
 import hashlib
@@ -230,62 +231,86 @@ def get_embedding(text, api_key=None, provider=None):
 
 # High-Level Agent Behaviors
 
-def classify_question(query, api_key=None, model_name=None, provider=None, base_url=None):
-    """Classify whether a question is document-specific or general knowledge."""
-    prompt = f"""Classify this question:
-"{query}"
+def check_conversational_pleasantry(query):
+    """
+    Check if a query is a conversational greeting, pleasantry, or question about the bot identity.
+    Returns a standard friendly response if matched, or None if it's a substantive inquiry.
+    """
+    if not query:
+        return None
+    q = query.strip().lower()
+    q_clean = re.sub(r'[^\w\s]', '', q).strip()
 
-If the question is about company-specific policies, employee handbooks, organizational rules, procedures, 
-benefits, leaves, conduct, or anything that would typically be found in uploaded company documents, respond 'document'.
-
-If the question is about general knowledge, greetings, small talk, general HR advice, industry best practices, 
-legal general info, or anything not tied to specific uploaded documents, respond 'general'.
-
-Answer with one word only: document or general""".strip()
-
-    try:
-        raw_res = generate_llm_response(
-            prompt=prompt,
-            provider=provider,
-            model_name=model_name,
-            api_key=api_key,
-            base_url=base_url,
-            generation_config={"temperature": 0.0, "max_tokens": 10}
+    # Common greetings
+    greetings = {
+        'hi', 'hello', 'hey', 'hiya', 'howdy', 'greetings', 'good morning',
+        'good afternoon', 'good evening', 'good day', 'yo', 'sup'
+    }
+    if q_clean in greetings:
+        return (
+            "Hello! I am **DocAgent AI**, your dedicated document knowledge base assistant. "
+            "I can answer questions based strictly on your uploaded documents.\n\n"
+            "Please ask any question about your uploaded documents, and I will be happy to find the answer for you."
         )
-        cleaned = raw_res.strip().lower()
-        if "general" in cleaned:
-            return "general"
-        return "document"
-    except Exception:
-        # Default to document search if classification call fails
-        return "document"
+
+    # Questions about bot identity or capabilities
+    bot_identity_queries = [
+        'who are you', 'what are you', 'what do you do', 'what can you do',
+        'how do you work', 'help', 'what is this'
+    ]
+    if any(q_clean == bi or q_clean.startswith(bi + ' ') for bi in bot_identity_queries):
+        return (
+            "I am **DocAgent AI**, a specialized Knowledge Base AI Assistant. "
+            "My role is to answer questions strictly and solely from the documents you upload.\n\n"
+            "I do not answer questions using external general knowledge. "
+            "Please upload documents and ask questions regarding their content."
+        )
+
+    # Gratitude
+    gratitude = {'thanks', 'thank you', 'thx', 'appreciate it', 'thank you so much', 'thanks a lot'}
+    if q_clean in gratitude:
+        return (
+            "You're very welcome! If you have any further questions about your uploaded documents, "
+            "feel free to ask."
+        )
+
+    return None
+
+
+def classify_question(query, api_key=None, model_name=None, provider=None, base_url=None):
+    """Classify whether a question is a pleasantry/meta query or document query."""
+    if check_conversational_pleasantry(query):
+        return "general"
+    return "document"
 
 
 def generate_answer(query, context_chunks, api_key=None, model_name=None, chat_history=None, provider=None, base_url=None):
-    """Generate an answer using retrieved chunks as context (document-based RAG)."""
+    """Generate an answer using retrieved chunks as context (strictly grounded document RAG)."""
     # Format retrieved context
     formatted_context = ""
     for idx, chunk in enumerate(context_chunks):
-        formatted_context += f"\n[Document: {chunk['filename']} | Match Rank: {idx+1} | Match Score: {chunk['score']:.2f}]\n"
+        formatted_context += f"\n[Document: {chunk['filename']} | Chunk: {idx+1} | Match Score: {chunk['score']:.2f}]\n"
         formatted_context += f"{chunk['text']}\n"
         formatted_context += "-" * 40 + "\n"
 
     system_instruction = (
-        "You are an expert HR AI Agent and Employee Handbook Assistant. "
-        "Your task is to help employees and managers understand the company's policies, guidelines, "
-        "and handbook terms based strictly on the provided document context.\n\n"
-        "Instructions:\n"
-        "1. Base your answer solely on the retrieved context below. Do not make up facts, urls, email addresses, "
-        "or policy details. If a policy is not mentioned in the context, clearly state: "
-        "'I cannot find this information in the currently uploaded policy documents. Please contact your HR representative.'\n"
-        "2. Cite the source document name (e.g. 'According to the Employee Conduct Policy...') when referencing details.\n"
-        "3. Provide a clear, professional, structured response. Use bullet points and bold text where appropriate.\n"
-        "4. Be friendly but maintain an official, professional tone."
+        "You are DocAgent AI, a specialized Knowledge Base AI Assistant. "
+        "Your sole role is to answer questions strictly, accurately, and solely based on the provided document context below.\n\n"
+        "STRICT GROUNDING RULES:\n"
+        "1. KNOWLEDGE BOUNDARY: Answer ONLY using facts directly and explicitly mentioned in the retrieved document context below. "
+        "Do NOT use pre-trained general knowledge, outside facts, assumptions, or extrapolations.\n"
+        "2. UNANSWERABLE QUESTIONS: If the retrieved context below does NOT contain the answer, "
+        "or does not have sufficient information to answer the question, you MUST decline and reply EXACTLY with:\n"
+        "'I couldn\'t find anything for your query in the uploaded documents. You can raise your query to Administration/Support.'\n"
+        "Under NO circumstances should you answer using outside general knowledge, write unrelated code, or provide information not in the documents.\n"
+        "3. CITATION: Always cite the source document name (e.g. 'According to [filename]...') when referencing details.\n"
+        "4. TONE & FORMAT: Provide clear, professional, structured answers using bullet points and bold text where appropriate.\n"
+        "5. ZERO HALLUCINATION: Never invent information, facts, URLs, numbers, or rules that are not explicitly present in the context."
     )
 
     prompt = f"""{system_instruction}
 
-Here is the retrieved context from the company's policies and handbook:
+Here is the retrieved context from the uploaded documents:
 =========================================
 {formatted_context}
 =========================================
@@ -306,46 +331,25 @@ Here is the retrieved context from the company's policies and handbook:
             model_name=model_name,
             api_key=api_key,
             base_url=base_url,
-            generation_config={"temperature": 0.2, "max_tokens": 1500}
+            generation_config={"temperature": 0.0, "max_tokens": 1500}
         )
     except Exception as e:
         raise RuntimeError(f"LLM generation failed ({provider or 'default'}): {str(e)}")
 
 
 def generate_general_answer(query, api_key=None, model_name=None, chat_history=None, provider=None, base_url=None):
-    """Generate an answer for general (non-document) questions."""
-    system_instruction = (
-        "You are a helpful, friendly HR AI Assistant. You help employees with general questions "
-        "about workplace practices, professional guidance, career advice, HR best practices, "
-        "and any other general inquiries.\n\n"
-        "Instructions:\n"
-        "1. Provide helpful, accurate, and professional responses.\n"
-        "2. If the question seems to be about specific company policies, kindly mention that you can "
-        "answer from uploaded company documents if they ask about specific policies.\n"
-        "3. Use bullet points, bold text, and clear formatting where appropriate.\n"
-        "4. Be friendly, professional, and concise."
+    """
+    Strict refusal for general/out-of-scope inquiries.
+    Enforces that DocAgent AI only answers from uploaded documents.
+    """
+    pleasantry = check_conversational_pleasantry(query)
+    if pleasantry:
+        return pleasantry
+
+    return (
+        "I couldn't find a relevant answer to your query. "
+        "Please contact the Administration or Support team for further assistance."
     )
-
-    prompt = f"{system_instruction}\n"
-    if chat_history:
-        prompt += "\nConversation History:\n"
-        for msg in chat_history:
-            role_label = "User" if msg['role'] == 'user' else "Assistant"
-            prompt += f"{role_label}: {msg['text']}\n"
-
-    prompt += f"\nCurrent Question: {query}\nAnswer:"
-
-    try:
-        return generate_llm_response(
-            prompt=prompt,
-            provider=provider,
-            model_name=model_name,
-            api_key=api_key,
-            base_url=base_url,
-            generation_config={"temperature": 0.4, "max_tokens": 1200}
-        )
-    except Exception as e:
-        raise RuntimeError(f"LLM generation failed ({provider or 'default'}): {str(e)}")
 
 
 def generate_session_title(query, api_key=None, model_name=None, provider=None, base_url=None):
