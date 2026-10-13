@@ -35,13 +35,15 @@
 /* 2. Mock Widget Panel transitions */
 .mock-widget-panel {
     opacity: 0;
-    pointer-events: none;
+    visibility: hidden;
+    pointer-events: none !important;
     transform: translateY(20px) scale(0.95);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .mock-widget-panel.open {
     opacity: 1;
-    pointer-events: auto;
+    visibility: visible;
+    pointer-events: auto !important;
     transform: translateY(0) scale(1);
 }
 

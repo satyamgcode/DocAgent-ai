@@ -1,4 +1,4 @@
-(function () {
+(function() {
     // 1. Resolve configuration from script data-attributes
     const currentScript = (() => {
         if (document.currentScript) return document.currentScript;
@@ -117,6 +117,7 @@
             display: flex;
             flex-direction: column;
             align-items: flex-end;
+            pointer-events: none !important;
         }
 
         /* Floating Launcher Button */
@@ -135,6 +136,7 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 2px solid rgba(255, 255, 255, 0.25);
             outline: none;
+            pointer-events: auto !important;
         }
 
         .docagent-widget-launcher:hover {
@@ -180,16 +182,24 @@
             overflow: hidden;
             margin-bottom: 16px;
             opacity: 0;
+            visibility: hidden;
+            pointer-events: none !important;
             transform: translateY(20px) scale(0.96);
-            pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: opacity 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                        transform 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+                        visibility 0.25s;
             transform-origin: bottom right;
         }
 
         .docagent-widget-panel.open {
             opacity: 1;
+            visibility: visible;
+            pointer-events: auto !important;
             transform: translateY(0) scale(1);
-            pointer-events: auto;
+        }
+
+        .docagent-widget-panel.closed {
+            display: none !important;
         }
 
         /* Header */
@@ -863,6 +873,7 @@
             .docagent-widget-container {
                 bottom: 12px;
                 right: 12px;
+                pointer-events: none !important;
             }
             .docagent-widget-panel {
                 width: calc(100vw - 24px);
@@ -875,6 +886,7 @@
             .docagent-widget-launcher {
                 width: 56px;
                 height: 56px;
+                pointer-events: auto !important;
             }
         }
     `;
@@ -899,7 +911,7 @@
 
         // Panel
         const panel = document.createElement('div');
-        panel.className = 'docagent-widget-panel';
+        panel.className = 'docagent-widget-panel closed';
         panel.innerHTML = `
             <div class="docagent-widget-header">
                 <div class="docagent-widget-header-info">
@@ -1109,9 +1121,17 @@
         }
 
         // 6. Action handlers
+        let closeTimeout = null;
         function toggleChat(forceOpen = null) {
             state.isOpen = forceOpen !== null ? forceOpen : !state.isOpen;
+            if (closeTimeout) {
+                clearTimeout(closeTimeout);
+                closeTimeout = null;
+            }
             if (state.isOpen) {
+                panel.classList.remove('closed');
+                // Force browser reflow to guarantee CSS transition plays cleanly from hidden state
+                void panel.offsetHeight;
                 panel.classList.add('open');
                 launcher.classList.add('open');
                 renderLauncherIcon();
@@ -1126,6 +1146,11 @@
                 panel.classList.remove('open');
                 launcher.classList.remove('open');
                 renderLauncherIcon();
+                closeTimeout = setTimeout(() => {
+                    if (!state.isOpen) {
+                        panel.classList.add('closed');
+                    }
+                }, 260);
             }
         }
 

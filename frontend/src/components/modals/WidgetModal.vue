@@ -111,8 +111,9 @@
               <!-- Injected interactive widget mock -->
               <div class="absolute inset-0 p-4 pointer-events-none flex flex-col justify-end items-end">
                 <div 
-                  class="w-[320px] sm:w-[340px] h-[360px] sm:h-[380px] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden pointer-events-auto mock-widget-panel"
-                  :class="{ open: mockWidgetOpen }"
+                  v-show="mockWidgetOpen"
+                  class="w-[320px] sm:w-[340px] h-[360px] sm:h-[380px] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden mock-widget-panel"
+                  :class="{ open: mockWidgetOpen, 'pointer-events-auto': mockWidgetOpen, 'pointer-events-none': !mockWidgetOpen }"
                 >
                   <!-- Header -->
                   <div 
@@ -316,7 +317,7 @@ const activeChatbotId = computed(() => chatbotId.value || 'cb_d778e9e0b662')
 const copiedEmbed = ref(false)
 const copiedConsole = ref(false)
 
-const WIDGET_VERSION = '1.1.1'
+const WIDGET_VERSION = '1.1.2'
 
 const escapeAttr = (value) => (value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
