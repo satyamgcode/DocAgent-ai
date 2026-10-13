@@ -563,22 +563,42 @@
             background: #FFFFFF;
         }
 
-        .docagent-widget-input {
+        .docagent-widget-input,
+        .docagent-widget-input:focus,
+        .docagent-widget-input:focus-visible,
+        .docagent-widget-input:active,
+        .docagent-widget-input:hover {
             flex: 1;
-            background: transparent;
-            border: none;
-            color: #0F172A;
-            font-size: 14px;
-            outline: none;
-            padding: 8px 0;
-            resize: none;
-            font-family: inherit;
-            max-height: 90px;
-            line-height: 1.4;
+            background: transparent !important;
+            border: none !important;
+            border-width: 0 !important;
+            border-style: none !important;
+            border-color: transparent !important;
+            outline: none !important;
+            outline-width: 0 !important;
+            outline-style: none !important;
+            outline-color: transparent !important;
+            box-shadow: none !important;
+            -webkit-box-shadow: none !important;
+            -moz-box-shadow: none !important;
+            --tw-ring-shadow: 0 0 #0000 !important;
+            --tw-ring-offset-shadow: 0 0 #0000 !important;
+            --tw-shadow: 0 0 #0000 !important;
+            --tw-ring-color: transparent !important;
+            appearance: none !important;
+            -webkit-appearance: none !important;
+            -moz-appearance: none !important;
+            color: #0F172A !important;
+            font-size: 14px !important;
+            padding: 8px 0 !important;
+            resize: none !important;
+            font-family: inherit !important;
+            max-height: 90px !important;
+            line-height: 1.4 !important;
         }
 
         .docagent-widget-input::placeholder {
-            color: #94A3B8;
+            color: #94A3B8 !important;
         }
 
         .docagent-widget-send-btn {
@@ -979,7 +999,7 @@
                     </button>
                 </div>
                 <div class="docagent-widget-input-row">
-                    <textarea class="docagent-widget-input" placeholder="Ask a question about policies..." rows="1"></textarea>
+                    <textarea class="docagent-widget-input" placeholder="Ask a question about policies..." rows="1" style="border: none !important; outline: none !important; box-shadow: none !important; -webkit-box-shadow: none !important; background: transparent !important;"></textarea>
                     <button class="docagent-widget-send-btn" disabled title="Send message">
                         ${SVGS.send}
                     </button>
