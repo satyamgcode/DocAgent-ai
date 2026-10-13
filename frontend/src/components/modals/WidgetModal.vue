@@ -25,7 +25,7 @@
               <div class="relative flex items-center">
                 <i class="mdi mdi-identifier absolute left-4 text-darkTeal text-base"></i>
                 <input 
-                  :value="chatbotId" 
+                  :value="activeChatbotId" 
                   type="text" 
                   readonly 
                   class="w-full bg-slate-50 border border-gray-200 outline-none rounded-xl py-2 pl-11 pr-4 text-xs text-slate-600 opacity-85 cursor-not-allowed font-medium"
@@ -90,7 +90,7 @@
                 <input 
                   v-model="apiUrl" 
                   type="text" 
-                  placeholder="http://localhost:8000" 
+                  placeholder="https://docagent-ai-production-f51e.up.railway.app" 
                   class="w-full bg-white border border-gray-300 focus:border-darkTeal focus:ring-1 focus:ring-darkTeal/20 outline-none rounded-xl py-2 pl-11 pr-4 text-xs text-slate-900 placeholder-gray-400 transition-all font-medium"
                 >
               </div>
@@ -303,37 +303,42 @@ const emit = defineEmits(['close'])
 const { chatbotId } = useAuth()
 
 const botName = ref('DocAgent AI')
-const themeColor = ref('#41808B')
-const greeting = ref('Hello! How can I help you with our company policies today? 📑')
-const launcherImage = ref('')
-const apiUrl = ref(window.location.origin)
+const themeColor = ref('#D946EF')
+const greeting = ref('Hello! How can I help you with our company policies today?')
+const launcherImage = ref('https://5t61ut5p19.ucarecd.net/f327ad9c-bcf0-4175-9ff9-9d09db984074/')
+const DEFAULT_BACKEND_URL = (import.meta.env.VITE_API_BASE_URL || 'https://docagent-ai-production-f51e.up.railway.app').replace(/\/+$/, '')
+const apiUrl = ref(DEFAULT_BACKEND_URL)
 const mockWidgetOpen = ref(false)
 const previewInquiryOpen = ref(false)
+
+const activeChatbotId = computed(() => chatbotId.value || 'cb_d778e9e0b662')
 
 const copiedEmbed = ref(false)
 const copiedConsole = ref(false)
 
 const WIDGET_VERSION = '1.1.1'
 
-const escapeAttr = (value) => value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
+const escapeAttr = (value) => (value || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 
 const embedCodeSnippet = computed(() => {
-  const url = apiUrl.value.replace(/\/$/, '')
+  const url = (apiUrl.value || DEFAULT_BACKEND_URL).trim().replace(/\/+$/, '')
+  const currentChatbotId = activeChatbotId.value
   const image = launcherImage.value.trim()
   const imageAttr = image ? `\n  data-launcher-image="${escapeAttr(image)}"` : ''
-  return `<script \n  src="${url}/widget.js?v=${WIDGET_VERSION}" \n  data-api-url="${url}"\n  data-chatbot-id="${chatbotId.value}"\n  data-bot-name="${botName.value}"\n  data-color="${themeColor.value}"\n  data-greeting="${greeting.value}"${imageAttr}\n  defer>\n<\/script>`
+  return `<script\n  src="${url}/widget.js?v=${WIDGET_VERSION}"\n  data-api-url="${url}"\n  data-chatbot-id="${currentChatbotId}"\n  data-bot-name="${escapeAttr(botName.value)}"\n  data-color="${themeColor.value}"\n  data-greeting="${escapeAttr(greeting.value)}"${imageAttr}\n  defer\n><\/script>`
 })
 
 const consoleCodeSnippet = computed(() => {
-  const url = apiUrl.value.replace(/\/$/, '')
-  const escName = botName.value.replace(/"/g, '\\"')
-  const escGreeting = greeting.value.replace(/"/g, '\\"')
+  const url = (apiUrl.value || DEFAULT_BACKEND_URL).trim().replace(/\/+$/, '')
+  const currentChatbotId = activeChatbotId.value
+  const escName = (botName.value || '').replace(/"/g, '\\"')
+  const escGreeting = (greeting.value || '').replace(/"/g, '\\"')
   const image = launcherImage.value.trim()
   const imageLine = image ? `script.setAttribute('data-launcher-image', ${JSON.stringify(image)});\n` : ''
   return `const script = document.createElement('script');\n` +
     `script.src = "${url}/widget.js?v=${WIDGET_VERSION}";\n` +
     `script.setAttribute('data-api-url', "${url}");\n` +
-    `script.setAttribute('data-chatbot-id', "${chatbotId.value}");\n` +
+    `script.setAttribute('data-chatbot-id', "${currentChatbotId}");\n` +
     `script.setAttribute('data-bot-name', "${escName}");\n` +
     `script.setAttribute('data-color', "${themeColor.value}");\n` +
     `script.setAttribute('data-greeting', "${escGreeting}");\n` +

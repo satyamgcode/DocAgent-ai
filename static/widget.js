@@ -11,11 +11,21 @@
         return scripts[scripts.length - 1];
     })();
 
-    const apiUrl = (currentScript.getAttribute('data-api-url') || window.location.origin).replace(/\/$/, '');
+    const scriptOrigin = (() => {
+        try {
+            if (currentScript && currentScript.src) {
+                const parsed = new URL(currentScript.src);
+                return parsed.origin;
+            }
+        } catch (e) {}
+        return 'https://docagent-ai-production-f51e.up.railway.app';
+    })();
+
+    const apiUrl = (currentScript.getAttribute('data-api-url') || scriptOrigin || 'https://docagent-ai-production-f51e.up.railway.app').replace(/\/$/, '');
     const chatbotId = currentScript.getAttribute('data-chatbot-id') || 'default';
     const botName = currentScript.getAttribute('data-bot-name') || 'DocAgent AI';
-    const themeColor = currentScript.getAttribute('data-color') || '#41808B';
-    const greetingMsg = currentScript.getAttribute('data-greeting') || 'Hello! How can I help you with our company policies today? 📑';
+    const themeColor = currentScript.getAttribute('data-color') || '#D946EF';
+    const greetingMsg = currentScript.getAttribute('data-greeting') || 'Hello! How can I help you with our company policies today?';
     let launcherImage = (currentScript.getAttribute('data-launcher-image') || '').trim();
 
     // State
