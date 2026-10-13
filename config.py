@@ -6,12 +6,34 @@ load_dotenv()
 
 # Base directories
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(BASE_DIR, "data")
-UPLOAD_DIR = os.path.join(DATA_DIR, "uploads")
+
+def _resolve_data_dir():
+    # 1. Custom DATA_DIR environment variable
+    explicit = os.getenv("DATA_DIR", "").strip()
+    if explicit:
+        return os.path.abspath(explicit)
+    # 2. Check persistent volume mount points (Railway, Render, Fly.io, Docker)
+    for candidate in ["/app/data", "/data"]:
+        try:
+            if os.path.exists(candidate) and os.path.isdir(candidate) and os.access(candidate, os.W_OK):
+                return candidate
+        except Exception:
+            pass
+    # 3. Default to local data directory
+    return os.path.join(BASE_DIR, "data")
+
+DATA_DIR = _resolve_data_dir()
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", os.path.join(DATA_DIR, "uploads"))
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 
-# Database configuration
-DB_PATH = os.path.join(DATA_DIR, "vector_store.db")
+# Database configuration: PostgreSQL via DATABASE_URL or SQLite via DB_PATH
+DATABASE_URL = (
+    os.getenv("DATABASE_URL", "").strip()
+    or os.getenv("POSTGRES_URL", "").strip()
+    or os.getenv("POSTGRESQL_URL", "").strip()
+    or None
+)
+DB_PATH = os.getenv("DB_PATH", os.path.join(DATA_DIR, "vector_store.db"))
 
 # Provider Configuration
 # Supported providers: "gemini", "openai", "claude", "generic", "openrouter", "groq"
